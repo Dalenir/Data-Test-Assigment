@@ -3,7 +3,6 @@ import datetime
 import logging
 
 from aio_pika import Message, connect, connect_robust
-from aio_pika.abc import AbstractIncomingMessage
 from aio_pika.patterns import RPC
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from pydantic import ValidationError

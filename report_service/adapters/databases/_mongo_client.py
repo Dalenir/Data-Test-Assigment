@@ -14,8 +14,7 @@ class Mongo:
         await self.data_collection.create_index("phone")
 
 
-def fresh_mongo_client():
-    return Mongo(
+async_mongo_client = Mongo(
         host=report_settings.MONGO_HOST,
         port=report_settings.MONGO_PORT,
         username=report_settings.MONGO_NAME,
@@ -23,5 +22,3 @@ def fresh_mongo_client():
         data_db_name=report_settings.MONGO_TSDB,
         data_collection_name=report_settings.MONGO_TCOL
     )
-
-async_mongo_client = fresh_mongo_client()
