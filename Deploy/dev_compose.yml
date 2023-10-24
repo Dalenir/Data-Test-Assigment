@@ -1,0 +1,86 @@
+version: "3.8"
+
+services:
+
+  send_service:
+    container_name: ${SEND_SRVC_HOST}
+    build:
+      context: ../sending_service
+      dockerfile: Dockerfile
+    depends_on:
+      - rabbitmq
+    env_file:
+      - .env
+    environment:
+      APP_MODE: Development
+    volumes:
+      - ../sending_service:/sending_service    # Only in dev, for something like HMR (if possible) and reference.
+    command: python3 main.py
+    networks:
+      - smTst_net
+
+  report_service:
+    container_name: ${REP_SRVC_HOST}
+    build:
+      context: ../report_service
+      dockerfile: Dockerfile
+    depends_on:
+      - rabbitmq
+      - mongo
+      - redis
+    env_file:
+      - .env
+    environment:
+      APP_MODE: Development
+    volumes:
+      - ../report_service:/report_service    # Only in dev, for something like HMR (if possible) and reference.
+    command: python3 main.py
+    networks:
+      - smTst_net
+
+  rabbitmq:
+    image: rabbitmq:3.13.0-rc.1-management-alpine
+    container_name: ${RABBMQ_HOST}
+    env_file:
+      - .env
+    ports:
+      - 15672:15672
+    expose:
+      - ${RABBMQ_PORT}
+    volumes:
+      - rabbit_vol_data:/var/lib/rabbitmq/
+      - ../rabbitmq/logs/:/var/log/rabbitmq
+    networks:
+      - smTst_net
+
+  mongo:
+    build:
+      context: ../mongo
+      dockerfile: .Dockerfile
+    container_name: '${MONGO_HOST}'
+    ports:
+      - "${MONGO_PORT}:${MONGO_PORT}"
+    volumes:
+      - mongo_tst_data:/data/db
+    env_file: .env
+    networks:
+      - smTst_net
+    command: mongod --quiet --logpath /dev/null --port "${MONGO_PORT}"
+
+  redis:
+    image: redis:7.2-rc2-alpine
+    container_name: '${REDIS_HOST}'
+    env_file: .env
+    ports:
+      - "6379:${REDIS_PORT}"
+    networks:
+      - smTst_net
+    command: redis-server --requirepass "${REDIS_PASS:?REDIS_PASS variable is not set}" --save 20 1 --loglevel warning --port ${REDIS_PORT}
+
+networks:
+  smTst_net:
+    driver: bridge
+
+volumes:
+  rabbit_vol_data:
+  mongo_tst_data:
