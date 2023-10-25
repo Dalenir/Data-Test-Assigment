@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import Field
 from ._model import Model
 
 class DurationsGroups(Model):

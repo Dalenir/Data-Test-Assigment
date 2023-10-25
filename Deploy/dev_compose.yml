@@ -9,6 +9,7 @@ services:
       dockerfile: Dockerfile
     depends_on:
       - rabbitmq
+      - report_service
     env_file:
       - .env
     environment:
@@ -54,14 +55,13 @@ services:
       - smTst_net
 
   mongo:
-    build:
-      context: ../mongo
-      dockerfile: .Dockerfile
+    image: mongo
     container_name: '${MONGO_HOST}'
     ports:
       - "${MONGO_PORT}:${MONGO_PORT}"
     volumes:
       - mongo_tst_data:/data/db
+      - ../mongo/data.json:/data/data.json
     env_file: .env
     networks:
       - smTst_net

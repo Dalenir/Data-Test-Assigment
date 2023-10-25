@@ -3,7 +3,8 @@ from enum import Enum
 
 from pydantic import Field, field_validator
 
-from adapters.models import Model, OutputData
+from ._model import Model
+from .OutputData import OutputData
 
 
 class Status(Enum):

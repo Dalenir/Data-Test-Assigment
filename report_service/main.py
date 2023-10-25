@@ -8,8 +8,7 @@ from pydantic import ValidationError
 from redis.asyncio import Redis
 
 from adapters.databases import async_mongo_client, Mongo, async_redis_client
-from adapters.models import OutputMessage, InputMessage, Mode
-from adapters.models.OutputMessage import Status
+from adapters.models import OutputMessage, InputMessage, Mode, Status
 from services import CachingService, compile_reports
 from settings import ReportSettings, report_settings
 
@@ -17,11 +16,11 @@ from settings import ReportSettings, report_settings
 async_sheduler = AsyncIOScheduler(timezone='UTC')
 
 
-async def get_phones_data(message: InputMessage,
+async def get_phones_data(message: str,
                           mongo: Mongo = async_mongo_client,
                           redis: Redis = async_redis_client) -> str:
     recieved = datetime.datetime.now()
-
+    message = InputMessage.model_validate_json(message)
     cache = CachingService(mongo, redis)
 
     phone_data = None

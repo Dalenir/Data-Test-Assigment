@@ -4,7 +4,7 @@ from pydantic_settings import BaseSettings
 
 class ReportSettings(BaseSettings):
 
-    cache_refresh_interval_minutes: int = Field(alias='REFRESH_INTERVAL_MINUTES', default=10)
+    cache_refresh_interval_minutes: int | None = Field(alias='REFRESH_INTERVAL_MINUTES', default=10)
     
     RABBMQ_HOST: str
     RABBMQ_PORT: int
