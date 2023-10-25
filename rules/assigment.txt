@@ -1,0 +1,25 @@
+You need to develop a report generation service and a client script that will send data to this service.
+
+Report Generation Service:
+
+Receives a report generation task via RabbitMQ (the task includes a list of 10 phone numbers, as shown in sample_input.json).
+
+Aggregates data based on the phone number (the "phone" field) and returns a response to the client in JSON format, including:
+
+The total number of rows.
+The number of rows categorized by duration (up to 10 seconds, 10 to 30 seconds, over 30 seconds).
+The cost of the most expensive attempt (cost = duration * 10).
+The cost of the least expensive attempt (cost = duration * 10).
+The average duration.
+The sum of costs for attempts with a duration exceeding 15 seconds.
+The service can receive multiple such tasks from clients simultaneously and should return responses asynchronously.
+
+The response should include the total duration of each report (total_duration).
+
+Example response to the client is provided in the attachment sample_output.json.
+
+Note:
+
+The data for phone numbers is in JSON format with keys: "phone," "start_date," and "end_date." Phone numbers range from 1 to 200. "start_date" represents the call start time, and "end_date" represents the call end time.
+High performance is crucial for this task. The service should be able to handle 10 simultaneous tasks from the client, each with 10 phone numbers.
+You should publish this task on GitHub, and the service should be accompanied by a Dockerfile.
