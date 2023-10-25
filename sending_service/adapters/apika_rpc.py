@@ -1,6 +1,6 @@
-from aio_pika.patterns import RPC
-
 import json
+
+from aio_pika.patterns import RPC
 
 
 class APikaRPC(RPC):

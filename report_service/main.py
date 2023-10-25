@@ -1,8 +1,7 @@
 import asyncio
 import datetime
-import logging
 
-from aio_pika import Message, connect, connect_robust
+from aio_pika import connect_robust
 from aio_pika.patterns import RPC
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from pydantic import ValidationError
@@ -18,7 +17,9 @@ from settings import ReportSettings, report_settings
 async_sheduler = AsyncIOScheduler(timezone='UTC')
 
 
-async def get_phones_data(message: InputMessage, mongo: Mongo = async_mongo_client, redis: Redis = async_redis_client) -> str:
+async def get_phones_data(message: InputMessage,
+                          mongo: Mongo = async_mongo_client,
+                          redis: Redis = async_redis_client) -> str:
     recieved = datetime.datetime.now()
 
     cache = CachingService(mongo, redis)
@@ -39,12 +40,27 @@ async def get_phones_data(message: InputMessage, mongo: Mongo = async_mongo_clie
             total_duration=(datetime.datetime.now() - recieved).microseconds / 1000000,
             from_='report_service'
         )
-    except ValidationError as e:
+    except ValidationError as e: #  Bug
         print(e)
     else:
-        a = out_message.model_dump_json(by_alias=True)
-        print(a)
-        return a
+        return out_message.model_dump_json(by_alias=True)
+
+
+async def worker(index: int, settings: ReportSettings = report_settings):
+    connection = await connect_robust(
+        settings.rabbitmq_url,
+        client_properties={"connection_name": f"callee{index}"},
+    )
+
+    channel = await connection.channel()
+
+    rpc = await RPC.create(channel)
+    await rpc.register("get_phones_data", get_phones_data, auto_delete=True)
+
+    try:
+        await asyncio.Future()
+    finally:
+        await connection.close()
 
 
 async def main(settings: ReportSettings = report_settings,
@@ -58,21 +74,7 @@ async def main(settings: ReportSettings = report_settings,
     asyncio.get_running_loop().create_task(cache.phones_refresh_cache())
     async_sheduler.add_job(cache.phones_refresh_cache, 'interval',
                            minutes=settings.cache_refresh_interval_minutes)
-
-    connection = await connect_robust(
-        settings.rabbitmq_url,
-        client_properties={"connection_name": "callee"},
-    )
-
-    channel = await connection.channel()
-
-    rpc = await RPC.create(channel)
-    await rpc.register("get_phones_data", get_phones_data, auto_delete=True)
-
-    try:
-        await asyncio.Future()
-    finally:
-        await connection.close()
+    await asyncio.gather(*[worker(i) for i in range(10)])
 
 
 if __name__ == "__main__":
